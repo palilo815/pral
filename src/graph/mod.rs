@@ -1,0 +1,3 @@
+//! Graph algorithms
+
+mod csr;
