@@ -1,6 +1,6 @@
 //! mod 2^64 - 1 hashing
 
-#[derive(Clone, Copy, Debug, Default, Eq, Ord)]
+#[derive(Clone, Copy, Debug, Default, Eq)]
 struct H(u64);
 
 impl H {
@@ -45,9 +45,15 @@ impl PartialEq for H {
     }
 }
 
+impl Ord for H {
+    fn cmp(&self, o: &Self) -> std::cmp::Ordering {
+        self.get().cmp(&o.get())
+    }
+}
+
 impl PartialOrd for H {
     fn partial_cmp(&self, o: &Self) -> Option<std::cmp::Ordering> {
-        self.get().partial_cmp(&o.get())
+        Some(self.cmp(o))
     }
 }
 
