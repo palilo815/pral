@@ -2,4 +2,5 @@
 
 mod bit;
 mod dsu;
+mod fenwick;
 mod seg;
