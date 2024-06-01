@@ -2,3 +2,4 @@
 
 mod bit;
 mod dsu;
+mod seg;
