@@ -1,13 +1,35 @@
 //! mod 2^64 - 1 hashing
 
-#[derive(Clone, Copy, Debug, Default, Eq)]
+#[derive(Clone, Copy, Default)]
+struct ZeroHasher(u64);
+
+impl std::hash::Hasher for ZeroHasher {
+    fn write_u64(&mut self, i: u64) {
+        self.0 = i;
+    }
+    fn write(&mut self, _: &[u8]) {
+        unimplemented!()
+    }
+    fn finish(&self) -> u64 {
+        self.0
+    }
+}
+
+impl std::hash::BuildHasher for ZeroHasher {
+    type Hasher = Self;
+    fn build_hasher(&self) -> Self::Hasher {
+        Self::default()
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
 struct H(u64);
 
 impl H {
-    fn new(x: u64) -> Self {
+    const fn new(x: u64) -> Self {
         Self(x)
     }
-    fn get(&self) -> u64 {
+    const fn get(&self) -> u64 {
         if self.0 == u64::MAX {
             0
         } else {
@@ -17,55 +39,58 @@ impl H {
 }
 
 impl std::ops::Add for H {
-    type Output = Self;
+    type Output = H;
     fn add(self, rhs: Self) -> Self::Output {
-        let x = self.0 + rhs.0;
-        Self(if x < self.0 { x + 1 } else { x })
+        let (r, flow) = self.0.overflowing_add(rhs.0);
+        H(r + flow as u64)
     }
 }
 
 impl std::ops::Sub for H {
-    type Output = Self;
+    type Output = H;
     fn sub(self, rhs: Self) -> Self::Output {
-        Self(self.0 + !rhs.0)
+        let (r, flow) = self.0.overflowing_sub(rhs.0);
+        H(r - flow as u64)
     }
 }
 
 impl std::ops::Mul for H {
-    type Output = Self;
+    type Output = H;
     fn mul(self, rhs: Self) -> Self::Output {
-        let x = self.0 as u128 * rhs.0 as u128;
-        Self(x as u64 + (x >> 64) as u64)
+        let r = self.0 as u128 * rhs.0 as u128;
+        H(r as u64) + H((r >> 64) as u64)
     }
 }
 
-impl PartialEq for H {
-    fn eq(&self, o: &Self) -> bool {
-        self.get() == o.get()
+impl std::cmp::PartialEq for H {
+    fn eq(&self, other: &Self) -> bool {
+        self.get() == other.get()
     }
 }
 
-impl Ord for H {
-    fn cmp(&self, o: &Self) -> std::cmp::Ordering {
-        self.get().cmp(&o.get())
+impl std::cmp::Eq for H {}
+
+impl std::cmp::Ord for H {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.get().cmp(&other.get())
     }
 }
 
-impl PartialOrd for H {
-    fn partial_cmp(&self, o: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(o))
-    }
-}
-
-impl std::hash::Hash for H {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.get().hash(state);
+impl std::cmp::PartialOrd for H {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 
 impl std::fmt::Display for H {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.get())
+    }
+}
+
+impl std::hash::Hash for H {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        state.write_u64(self.get())
     }
 }
 
