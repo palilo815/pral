@@ -8,7 +8,7 @@ struct FenwickTree<T> {
 
 impl<T> FenwickTree<T>
 where
-    T: Clone + Copy + std::ops::AddAssign + std::ops::Sub<Output = T>,
+    T: Copy + std::ops::AddAssign + std::ops::Sub<Output = T>,
 {
     fn new(size: usize, e: T) -> Self {
         Self {
