@@ -21,22 +21,16 @@ impl<T, F> std::ops::IndexMut<usize> for SegmentTree<T, F> {
 
 impl<T, F> SegmentTree<T, F>
 where
-    T: Clone + Copy,
+    T: Copy,
     F: Fn(T, T) -> T,
 {
     fn new(size: usize, e: T, f: F) -> Self {
         let size = size.next_power_of_two();
-        Self {
-            size,
-            data: vec![e; size << 1].into(),
-            e,
-            f,
-        }
+        let data = vec![e; size << 1].into_boxed_slice();
+        Self { size, data, e, f }
     }
     fn build(&mut self) {
-        for i in (1..self.size).rev() {
-            self.data[i] = (self.f)(self.data[i << 1], self.data[i << 1 | 1]);
-        }
+        (1..self.size).rev().for_each(|i| self._pull(i));
     }
     fn set(&mut self, mut i: usize, x: T) {
         assert!(i < self.size);
@@ -44,15 +38,15 @@ where
         self.data[i] = x;
         while i != 1 {
             i >>= 1;
-            self.data[i] = (self.f)(self.data[i << 1], self.data[i << 1 | 1]);
+            self._pull(i);
         }
     }
-    fn prod(&self, mut l: usize, mut r: usize) -> T {
-        assert!(l <= r && r <= self.size);
+    fn prod(&self, range: std::ops::Range<usize>) -> T {
+        assert!(range.start <= range.end && range.end <= self.size);
+        let mut l = self.size + range.start;
+        let mut r = self.size + range.end;
         let mut prod_l = self.e;
         let mut prod_r = self.e;
-        l += self.size;
-        r += self.size;
         while l != r {
             if l & 1 == 1 {
                 prod_l = (self.f)(prod_l, self.data[l]);
@@ -67,11 +61,9 @@ where
         }
         (self.f)(prod_l, prod_r)
     }
-    fn all_prod(&mut self) -> T {
-        self.data[1]
-    }
-    fn clear(&mut self) {
-        self.data[1..].fill(self.e);
+    #[inline]
+    fn _pull(&mut self, i: usize) {
+        self.data[i] = (self.f)(self.data[i << 1], self.data[i << 1 | 1]);
     }
 }
 
