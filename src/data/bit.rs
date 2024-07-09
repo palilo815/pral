@@ -2,32 +2,36 @@
 
 struct BinaryIndexedTree<T, F> {
     size: usize,
-    tree: Box<[T]>,
+    data: Box<[T]>,
     e: T,
     f: F,
 }
 
 impl<T, F> BinaryIndexedTree<T, F>
 where
-    T: Clone + Copy,
+    T: Copy,
     F: Fn(T, T) -> T,
 {
     fn new(size: usize, e: T, f: F) -> Self {
-        Self {
-            size,
-            tree: vec![e; size + 1].into(),
-            e,
-            f,
+        let data = vec![e; size].into_boxed_slice();
+        Self { size, data, e, f }
+    }
+    fn from(data: Vec<T>, e: T, f: F) -> Self {
+        let size = data.len();
+        let mut data = data.into_boxed_slice();
+        for i in 1..size + 1 {
+            let j = i + (i & i.wrapping_neg()) - 1;
+            if j < size {
+                data[j] = f(data[i - 1], data[j]);
+            }
         }
+        Self { size, data, e, f }
     }
-    fn clear(&mut self) {
-        self.tree[1..].fill(self.e);
-    }
-    fn update(&mut self, mut i: usize, x: T) {
+    fn update(&mut self, mut i: usize, v: T) {
         assert!(i <= self.size);
         i += 1;
         while i <= self.size {
-            self.tree[i] = (self.f)(self.tree[i], x);
+            self.data[i - 1] = (self.f)(v, self.data[i - 1]);
             i += i & i.wrapping_neg();
         }
     }
@@ -35,10 +39,23 @@ where
         assert!(i <= self.size);
         let mut ret = self.e;
         while i != 0 {
-            ret = (self.f)(ret, self.tree[i]);
+            ret = (self.f)(ret, self.data[i - 1]);
             i &= i - 1;
         }
         ret
+    }
+    fn max_right<P: Fn(T) -> bool>(&self, pred: P) -> (usize, T) {
+        let mut i = 0;
+        let mut acc = self.e;
+        let mut len = 1 << self.size.ilog2();
+        while len != 0 {
+            if i + len <= self.size && pred((self.f)(acc, self.data[i + len - 1])) {
+                i += len;
+                acc = (self.f)(acc, self.data[i - 1]);
+            }
+            len >>= 1;
+        }
+        (i, acc)
     }
 }
 
