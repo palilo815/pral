@@ -44,7 +44,7 @@ where
         }
         ret
     }
-    fn max_right<P: Fn(T) -> bool>(&self, pred: P) -> (usize, T) {
+    fn partition_point<P: Fn(T) -> bool>(&self, pred: P) -> (usize, T) {
         let mut i = 0;
         let mut acc = self.e;
         let mut len = 1 << self.size.ilog2();
@@ -88,15 +88,18 @@ fn prefix_max() {
 }
 
 #[test]
-fn prefix_closure() {
-    let data = [2, -1, 3, 0, 3, -7, 10, 9];
-    let mut pref = vec![(i32::MAX, i32::MIN); data.len() + 1];
-    let mut bit = BinaryIndexedTree::new(data.len(), (i32::MAX, i32::MIN), |l, r| (l.0.min(r.0), l.1.max(r.1)));
-    for (i, x) in data.into_iter().enumerate() {
-        pref[i + 1] = (pref[i].0.min(x), pref[i].1.max(x));
-        bit.update(i, (x, x));
+fn partition_point() {
+    let data = [0, 2, 0, 1, 1, 0, 2, 0];
+    let mut bit = BinaryIndexedTree::new(data.len(), 0, std::ops::Add::add);
+    for (i, &x) in data.iter().enumerate() {
+        bit.update(i, x);
     }
-    for (i, x) in pref.into_iter().enumerate() {
-        assert_eq!(x, bit.prefix(i));
+    assert!(data.iter().all(|&x| x >= 0));
+    for i in 0..=data.iter().sum::<i32>() + 1 {
+        let pred = |x| x < i;
+        let (j, acc) = bit.partition_point(pred);
+        let acc_naive = data.iter().take(j).sum::<i32>();
+        assert_eq!(acc, acc_naive);
+        assert!(j == data.len() || !pred(bit.prefix(j + 1)));
     }
 }
