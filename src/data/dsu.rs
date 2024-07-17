@@ -1,7 +1,7 @@
 //! Disjoint set union
 
 struct DisjointSet {
-    pub p: Box<[i32]>,
+    p: Box<[i32]>,
 }
 
 impl DisjointSet {
