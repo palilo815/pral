@@ -1,13 +1,5 @@
-/**
-* @date     2022-01-22
-* @author   palilo
-* @brief    sparse table
-*           a data structure that can answer overlap-friendly operation in O(1) time
-* @comment  `(31 or 63) ^ x.leading_zeros()` is equivalent to `x.leading_zeros().log2()`
-*           `log2` is nightly-only API now.
-* @usage    `let sparse = SparseTable::new(a, |&lhs, &rhs| lhs.min(rhs));`
-*               -> range minimum query for `a`
-*/
+//! Segment data
+
 struct SparseTable<T, F> {
     size: usize,
     data: Box<[Box<[T]>]>,
@@ -17,7 +9,7 @@ struct SparseTable<T, F> {
 
 impl<T, F> SparseTable<T, F>
 where
-    T: Copy + std::fmt::Debug,
+    T: Copy,
     F: Fn(T, T) -> T,
 {
     fn new(data: Vec<T>, e: T, f: F) -> Self {
