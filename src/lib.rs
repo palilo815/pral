@@ -2,5 +2,5 @@
 mod data;
 mod etc;
 mod graph;
-mod num;
+mod math;
 mod string;
