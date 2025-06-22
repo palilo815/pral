@@ -1,5 +1,3 @@
-use std::vec;
-
 struct Grid<T> {
     n: usize,
     m: usize,
