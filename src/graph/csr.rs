@@ -13,7 +13,7 @@ impl<T> std::ops::Index<usize> for Csr<T> {
 }
 
 impl<T: Copy + Default> Csr<T> {
-    fn from_direct_edges(n: usize, edges: Vec<(usize, usize, T)>) -> Self {
+    fn from_directed_edges(n: usize, edges: Vec<(usize, usize, T)>) -> Self {
         let mut values = vec![(0, T::default()); edges.len()].into_boxed_slice();
         let mut pref = vec![0; n + 1].into_boxed_slice();
         for &(u, _, _) in edges.iter() {
@@ -49,9 +49,9 @@ impl<T: Copy + Default> Csr<T> {
 }
 
 #[test]
-fn from_direct_edges() {
+fn from_directed_edges() {
     let edges = vec![(0, 2, -1), (2, 4, -2), (4, 0, -3), (0, 3, -4), (3, 3, -5)];
-    let csr = Csr::from_direct_edges(5, edges.clone());
+    let csr = Csr::from_directed_edges(5, edges.clone());
     assert_eq!(csr[0], [(3, -4), (2, -1)]);
     assert_eq!(csr[1], []);
     assert_eq!(csr[2], [(4, -2)]);
@@ -73,7 +73,7 @@ fn from_undirected_edges() {
 #[test]
 fn unit_weight() {
     let edges = vec![(0, 0, ())];
-    let csr = Csr::from_direct_edges(1, edges);
+    let csr = Csr::from_directed_edges(1, edges);
     let edge = csr[0][0];
     assert_eq!(std::mem::size_of_val(&edge), std::mem::size_of::<usize>());
 }
