@@ -1,5 +1,34 @@
-//! Disjoint set union
+//! Disjoint Set Union _(Union Find)_
+//!
+//! - **Author** &emsp; palilo
+//! - **Source** &emsp; well known
+//! - **Update** &emsp; 2023-09-01
+//!
+//! A DSU is a data structure that keeps track of a set of elements partitioned into a number of disjoint (non-overlapping) subsets.
+//!
+//! # Key Operations
+//!
+//! 1. `find`: Determines which subset an element belongs to.
+//! 2. `union`: Joins two subsets into a single subset.
+//!
+//! # Time Complexity
+//!
+//! The time complexity of DSU operations is nearly constant on average, specifically O(α(n)), where α(n) is the inverse of the Ackermann function.
+//! The Ackermann function grows extremely fast, so its inverse, α(n), is very slow-growing.
+//! For all practical purposes, α(n) can be considered a constant less than 5.
+//!
+//! This near-constant time complexity is achieved by using two optimizations:
+//!
+//!  * **Path Compression**: During a find operation, this optimization flattens the structure of the tree by making every node on the find path point directly to the root.
+//!  * **Union by Size/Rank**: During a union operation, this optimization attaches the smaller tree to the root of the larger tree. This keeps the tree structure relatively flat.
 
+/// A DSU with basic operations.
+///
+/// # Note
+///
+/// It is intended that `p` is public. It makes much easier to iterate the all roots or unite the nodes in different ways.
+///
+/// No [`assert!`], because the most important method [`Self::find`] is reculsively executed.
 struct DisjointSet {
     p: Box<[i32]>,
 }
@@ -12,9 +41,9 @@ impl DisjointSet {
         if self.p[u] < 0 {
             u
         } else {
-            let rt = self.find(self.p[u] as usize);
-            self.p[u] = rt as i32;
-            rt
+            let root = self.find(self.p[u] as usize);
+            self.p[u] = root as i32;
+            root
         }
     }
     fn unite(&mut self, u: usize, v: usize) -> bool {
